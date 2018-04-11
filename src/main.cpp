@@ -1,18 +1,3 @@
-// Advanced Microcontroller-based Audio Workshop
-//
-// http://www.pjrc.com/store/audio_tutorial_kit.html
-// https://hackaday.io/project/8292-microcontroller-audio-workshop-had-supercon-2015
-// 
-// Part 1-2: Test Hardware
-//
-// Simple beeping is pre-loaded on the Teensy, so
-// it will create sound and print info to the serial
-// monitor when plugged into a PC.
-//
-// This program is supposed to be pre-loaded before
-// the workshop, so Teensy+Audio will beep when
-// plugged in.
-
 #include <Audio.h>
 #include <Wire.h>
 #include <SD.h>
@@ -29,22 +14,21 @@ void setup() {
   AudioMemory(10);
 
   Serial.begin(115200);
-  
+
   sgtl5000_1.enable();
-  
+
   sgtl5000_1.volume(0.3);
-  
+
   waveform1.begin(WAVEFORM_SINE);
-  
+
   delay(1000);
 }
 
 void loop() {
-  waveform1.frequency(880);
+  waveform1.frequency(1280);
   waveform1.amplitude(0.9);
   delay(250);
-  
+
   waveform1.amplitude(0);
   delay(1750);
 }
-
