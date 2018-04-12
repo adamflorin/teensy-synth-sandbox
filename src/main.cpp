@@ -14,6 +14,8 @@ AudioSynthWaveform osc2c;
 AudioSynthWaveform osc2d;
 AudioMixer4 osc1mixer;
 AudioMixer4 osc2mixer;
+AudioFilterBiquad osc1filter;
+AudioFilterBiquad osc2filter;
 AudioMixer4 mixer;
 AudioEffectEnvelope envelope;
 AudioOutputI2S headphoneOutput;
@@ -26,8 +28,10 @@ AudioConnection patchCord5(osc2a, 0, osc2mixer, 0);
 AudioConnection patchCord6(osc2b, 0, osc2mixer, 1);
 AudioConnection patchCord7(osc2c, 0, osc2mixer, 2);
 AudioConnection patchCord8(osc2d, 0, osc2mixer, 3);
-AudioConnection patchCord9(osc1mixer, 0, mixer, 0);
-AudioConnection patchCord10(osc2mixer, 0, mixer, 1);
+AudioConnection patchCord8b(osc1mixer, 0, osc1filter, 0);
+AudioConnection patchCord8c(osc2mixer, 0, osc2filter, 0);
+AudioConnection patchCord9(osc1filter, 0, mixer, 0);
+AudioConnection patchCord10(osc2filter, 0, mixer, 1);
 AudioConnection patchCord11(mixer, envelope);
 AudioConnection patchCord12(envelope, 0, usbOutput, 0);
 AudioConnection patchCord13(envelope, 0, usbOutput, 1);
@@ -92,6 +96,15 @@ void setup() {
   osc2d.phase(135.0);
   osc2d.begin(WAVEFORM_SAWTOOTH_REVERSE);
 
+  // filters
+  float filter1freq = 457.572;
+  float filter1q = 0.7;
+  osc1filter.setLowpass(0, filter1freq, filter1q);
+  osc1filter.setLowpass(1, filter1freq, filter1q);
+  float filter2freq = 84.108;
+  float filter2q = 0.5;
+  osc2filter.setLowpass(0, filter2freq, filter2q);
+
   // mixers
   osc1mixer.gain(0, 0.5);
   osc1mixer.gain(1, 0.5);
@@ -101,7 +114,7 @@ void setup() {
   osc2mixer.gain(1, 0.5);
   osc2mixer.gain(2, 0.5);
   osc2mixer.gain(3, 0.5);
-  mixer.gain(0, 0.45); // Osc 1: eyeballing -0.61 dB
+  mixer.gain(0, 0.48); // Osc 1: eyeballing -0.61 dB
   mixer.gain(1, 0.5); // Osc 2: eyeballing 0 dB
 
   // envelope
