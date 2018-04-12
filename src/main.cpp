@@ -29,8 +29,8 @@ AudioConnection patchCord8(osc2d, 0, osc2mixer, 3);
 AudioConnection patchCord9(osc1mixer, 0, mixer, 0);
 AudioConnection patchCord10(osc2mixer, 0, mixer, 1);
 AudioConnection patchCord11(mixer, envelope);
-AudioConnection patchCord12(envelope, 0, headphoneOutput, 0);
-AudioConnection patchCord13(envelope, 0, headphoneOutput, 1);
+AudioConnection patchCord12(envelope, 0, usbOutput, 0);
+AudioConnection patchCord13(envelope, 0, usbOutput, 1);
 AudioControlSGTL5000 sgtl5000_1;
 
 void setup() {
@@ -40,7 +40,7 @@ void setup() {
   float spread_up_half = powf(2.0, spread_cents / 2.0 / 1200.0);
   float spread_down_half = powf(2.0, -spread_cents / 2.0 / 1200.0);
 
-  AudioMemory(10);
+  AudioMemory(50);
 
   // output
   sgtl5000_1.enable();
@@ -101,8 +101,8 @@ void setup() {
   osc2mixer.gain(1, 0.5);
   osc2mixer.gain(2, 0.5);
   osc2mixer.gain(3, 0.5);
-  mixer.gain(0, 0.85); // Osc 1: eyeballing -0.61 dB
-  mixer.gain(1, 0.9); // Osc 2: eyeballing 0 dB
+  mixer.gain(0, 0.45); // Osc 1: eyeballing -0.61 dB
+  mixer.gain(1, 0.5); // Osc 2: eyeballing 0 dB
 
   // envelope
   envelope.attack(10.0);
