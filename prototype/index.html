@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.1/dat.gui.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.js"></script> -->
+    <script src="./Tone.js"></script>
+    <script type="text/javascript">
+      let osc1a, osc1b, osc1c, osc1d
+
+      // dat.gui
+      const Settings = function() {
+        this.spreadCents = 0.0
+      }
+      const settings = new Settings()
+      const gui = new dat.GUI()
+      gui.add(settings, 'spreadCents', 0.0, 100.0)
+        .onChange(_ => updateFrequencies())
+
+      function initAudioGraph() {
+        const gain = new Tone.Gain({gain: 0.1}).toMaster()
+
+        osc1a = new Tone.Oscillator({
+          type: 'sine',
+          phase: 0.0
+        }).connect(gain).start()
+        // osc1b = new Tone.Oscillator({
+        //   type: 'square',
+        //   phase: 0.0
+        // }).connect(gain).start()
+        // osc1c = new Tone.Oscillator({
+        //   type: 'square',
+        //   frequency: baseFreq * spreadUpHalf,
+        //   phase: 0.0
+        // }).connect(gain).start()
+        // osc1d = new Tone.Oscillator({
+        //   type: 'square',
+        //   frequency: baseFreq * spreadDownHalf,
+        //   phase: 0.0
+        // }).connect(gain).start()
+      }
+
+      function updateFrequencies() {
+        const baseFreq = 110.0
+
+        osc1a.frequency.value = baseFreq // * Math.pow(2.0, settings.spreadCents / 1200.0)
+        // osc1b.frequency.value = baseFreq * Math.pow(2.0, -settings.spreadCents / 1200.0)
+        // osc1c.frequency.value = baseFreq * Math.pow(2.0, (settings.spreadCents * (2.0 / 3.0)) / 1200.0)
+        // osc1d.frequency.value = baseFreq * Math.pow(2.0, (-settings.spreadCents * (2.0 / 3.0)) / 1200.0)
+      }
+
+      function bindHandlers() {
+        document.addEventListener('keydown', event => {
+          if (event.key === " ") {
+            toggleMute()
+          }
+        })
+      }
+
+      function toggleMute() {
+        Tone.Master.mute = !Tone.Master.mute
+      }
+
+      initAudioGraph()
+      // updateFrequencies()
+      bindHandlers()
+    </script>
+  </body>
+</html>
