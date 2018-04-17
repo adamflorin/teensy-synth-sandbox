@@ -4,6 +4,16 @@
 #include <SPI.h>
 #include <SerialFlash.h>
 
+#define NUM_FIR_COEFFS 4
+
+// max positive value is 0x7FFF; sum to something near
+short fir_coeffs[NUM_FIR_COEFFS] = {
+  (short)0x1000,
+  (short)0x3000,
+  (short)0x3000,
+  (short)0x1000,
+};
+
 AudioSynthWaveform osc1a;
 AudioSynthWaveform osc1b;
 AudioSynthWaveform osc1c;
@@ -14,6 +24,8 @@ AudioSynthWaveform osc2c;
 AudioSynthWaveform osc2d;
 AudioMixer4 osc1mixer;
 AudioMixer4 osc2mixer;
+AudioFilterFIR osc1firfilter;
+AudioFilterFIR osc2firfilter;
 AudioFilterBiquad osc1filter;
 AudioFilterBiquad osc2filter;
 AudioMixer4 mixer;
@@ -28,8 +40,10 @@ AudioConnection patchCord5(osc2a, 0, osc2mixer, 0);
 AudioConnection patchCord6(osc2b, 0, osc2mixer, 1);
 AudioConnection patchCord7(osc2c, 0, osc2mixer, 2);
 AudioConnection patchCord8(osc2d, 0, osc2mixer, 3);
-AudioConnection patchCord8b(osc1mixer, 0, osc1filter, 0);
-AudioConnection patchCord8c(osc2mixer, 0, osc2filter, 0);
+AudioConnection patchCord8b(osc1mixer, 0, osc1firfilter, 0);
+AudioConnection patchCord8c(osc2mixer, 0, osc2firfilter, 0);
+AudioConnection patchCord8d(osc1firfilter, 0, osc1filter, 0);
+AudioConnection patchCord8e(osc2firfilter, 0, osc2filter, 0);
 AudioConnection patchCord9(osc1filter, 0, mixer, 0);
 AudioConnection patchCord10(osc2filter, 0, mixer, 1);
 AudioConnection patchCord11(mixer, envelope);
@@ -97,8 +111,11 @@ void setup() {
   osc1filter.setLowpass(0, filter1freq, filter1q);
   osc1filter.setLowpass(1, filter1freq, filter1q);
   float filter2freq = 84.108;
-  float filter2q = 0.5;
+  float filter2q = 0.9;
   osc2filter.setLowpass(0, filter2freq, filter2q);
+
+  osc1firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc2firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
 
   // mixers
   osc1mixer.gain(0, 0.15);
