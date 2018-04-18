@@ -29,33 +29,66 @@ AudioSynthWaveform osc2a;
 AudioSynthWaveform osc2b;
 AudioSynthWaveform osc2c;
 AudioSynthWaveform osc2d;
-AudioMixer4 osc1mixer;
-AudioMixer4 osc2mixer;
-AudioFilterFIR osc1firfilter;
-AudioFilterFIR osc2firfilter;
-AudioFilterBiquad osc1filter;
-AudioFilterBiquad osc2filter;
-AudioMixer4 mixer;
-AudioEffectEnvelope envelope;
+AudioMixer4 osc1Lmixer;
+AudioMixer4 osc1Rmixer;
+AudioMixer4 osc2Lmixer;
+AudioMixer4 osc2Rmixer;
+AudioFilterFIR osc1Lfirfilter;
+AudioFilterFIR osc1Rfirfilter;
+AudioFilterFIR osc2Lfirfilter;
+AudioFilterFIR osc2Rfirfilter;
+AudioFilterBiquad osc1Lfilter;
+AudioFilterBiquad osc1Rfilter;
+AudioFilterBiquad osc2Lfilter;
+AudioFilterBiquad osc2Rfilter;
+AudioMixer4 mixerL;
+AudioMixer4 mixerR;
+AudioEffectEnvelope envelopeL;
+AudioEffectEnvelope envelopeR;
 AudioOutputI2S headphoneOutput;
 AudioOutputUSB usbOutput;
-AudioConnection patchCord1(osc1a, 0, osc1mixer, 0);
-AudioConnection patchCord2(osc1b, 0, osc1mixer, 1);
-AudioConnection patchCord3(osc1c, 0, osc1mixer, 2);
-AudioConnection patchCord4(osc1d, 0, osc1mixer, 3);
-AudioConnection patchCord5(osc2a, 0, osc2mixer, 0);
-AudioConnection patchCord6(osc2b, 0, osc2mixer, 1);
-AudioConnection patchCord7(osc2c, 0, osc2mixer, 2);
-AudioConnection patchCord8(osc2d, 0, osc2mixer, 3);
-AudioConnection patchCord8b(osc1mixer, 0, osc1firfilter, 0);
-AudioConnection patchCord8c(osc2mixer, 0, osc2firfilter, 0);
-AudioConnection patchCord8d(osc1firfilter, 0, osc1filter, 0);
-AudioConnection patchCord8e(osc2firfilter, 0, osc2filter, 0);
-AudioConnection patchCord9(osc1filter, 0, mixer, 0);
-AudioConnection patchCord10(osc2filter, 0, mixer, 1);
-AudioConnection patchCord11(mixer, envelope);
-AudioConnection patchCord12(envelope, 0, usbOutput, 0);
-AudioConnection patchCord13(envelope, 0, usbOutput, 1);
+
+// dry osc mix
+AudioConnection patchCord1(osc1a, 0, osc1Lmixer, 0);
+AudioConnection patchCord1a(osc1a, 0, osc1Rmixer, 0);
+AudioConnection patchCord2(osc1b, 0, osc1Lmixer, 1);
+AudioConnection patchCord2a(osc1b, 0, osc1Rmixer, 1);
+AudioConnection patchCord3(osc1c, 0, osc1Lmixer, 2);
+AudioConnection patchCord3a(osc1c, 0, osc1Rmixer, 2);
+AudioConnection patchCord4(osc1d, 0, osc1Lmixer, 3);
+AudioConnection patchCord4a(osc1d, 0, osc1Rmixer, 3);
+AudioConnection patchCord5(osc2a, 0, osc2Lmixer, 0);
+AudioConnection patchCord5a(osc2a, 0, osc2Rmixer, 0);
+AudioConnection patchCord6(osc2b, 0, osc2Lmixer, 1);
+AudioConnection patchCord6a(osc2b, 0, osc2Rmixer, 1);
+AudioConnection patchCord7(osc2c, 0, osc2Lmixer, 2);
+AudioConnection patchCord7a(osc2c, 0, osc2Rmixer, 2);
+AudioConnection patchCord8(osc2d, 0, osc2Lmixer, 3);
+AudioConnection patchCord8a(osc2d, 0, osc2Rmixer, 3);
+
+// dry osc mix -> FIR
+AudioConnection patchCord8b(osc1Lmixer, 0, osc1Lfirfilter, 0);
+AudioConnection patchCord8b2(osc1Rmixer, 0, osc1Rfirfilter, 0);
+AudioConnection patchCord8c(osc2Lmixer, 0, osc2Lfirfilter, 0);
+AudioConnection patchCord8c2(osc2Rmixer, 0, osc2Rfirfilter, 0);
+
+// FIR -> biquad
+AudioConnection patchCord8d(osc1Lfirfilter, 0, osc1Lfilter, 0);
+AudioConnection patchCord8d2(osc1Rfirfilter, 0, osc1Rfilter, 0);
+AudioConnection patchCord8e(osc2Lfirfilter, 0, osc2Lfilter, 0);
+AudioConnection patchCord8e2(osc2Rfirfilter, 0, osc2Rfilter, 0);
+
+AudioConnection patchCord9(osc1Lfilter, 0, mixerL, 0);
+AudioConnection patchCord9a(osc1Rfilter, 0, mixerR, 0);
+AudioConnection patchCord10(osc2Lfilter, 0, mixerL, 1);
+AudioConnection patchCord10a(osc2Rfilter, 0, mixerR, 1);
+
+AudioConnection patchCord11(mixerL, envelopeL);
+AudioConnection patchCord11a(mixerR, envelopeR);
+
+AudioConnection patchCord12(envelopeL, 0, usbOutput, 0);
+AudioConnection patchCord13(envelopeR, 0, usbOutput, 1);
+
 AudioControlSGTL5000 sgtl5000_1;
 
 void setup() {
@@ -79,75 +112,103 @@ void loop() {
   float duration = 250.0 * powf(2.0, rand() % 3);
   const float legato = 0.75;
 
-  envelope.noteOn();
+  envelopeL.noteOn();
+  envelopeR.noteOn();
   delay(duration * legato);
 
-  envelope.noteOff();
+  envelopeL.noteOff();
+  envelopeR.noteOff();
   delay(duration * (1.0 - legato));
 }
 
 void initOscillatorSmoothers() {
-  osc1firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
-  osc2firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc1Lfirfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc1Rfirfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc2Lfirfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc2Rfirfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
 }
 
 void initEq() {
   float filter1freq = 457.572;
   float filter1q = 0.7;
-  osc1filter.setLowpass(0, filter1freq, filter1q);
-  osc1filter.setLowpass(1, filter1freq, filter1q);
+  osc1Lfilter.setLowpass(0, filter1freq, filter1q);
+  osc1Rfilter.setLowpass(0, filter1freq, filter1q);
+  osc1Lfilter.setLowpass(1, filter1freq, filter1q);
+  osc1Rfilter.setLowpass(1, filter1freq, filter1q);
   float filter2freq = 84.108;
   float filter2q = 0.9;
-  osc2filter.setLowpass(0, filter2freq, filter2q);
+  osc2Lfilter.setLowpass(0, filter2freq, filter2q);
+  osc2Rfilter.setLowpass(0, filter2freq, filter2q);
 }
 
 void initOscillators() {
-  osc1a.sync(1.0);
+  float osc1sync = 1.0; //4.0;
+  osc1a.sync(osc1sync);
   osc1a.amplitude(1.0);
-  osc1a.begin(WAVEFORM_SQUARE);
-  osc1b.sync(1.0);
+  osc1a.begin(WAVEFORM_SQUARETOOTH);
+  osc1b.sync(osc1sync);
   osc1b.amplitude(1.0);
-  osc1b.begin(WAVEFORM_SQUARE);
-  osc1c.sync(1.0);
+  osc1b.begin(WAVEFORM_SQUARETOOTH);
+  osc1c.sync(osc1sync);
   osc1c.amplitude(1.0);
-  osc1c.begin(WAVEFORM_SQUARE);
-  osc1d.sync(1.0);
+  osc1c.begin(WAVEFORM_SQUARETOOTH);
+  osc1d.sync(osc1sync);
   osc1d.amplitude(1.0);
-  osc1d.begin(WAVEFORM_SQUARE);
+  osc1d.begin(WAVEFORM_SQUARETOOTH);
 
-  osc2a.sync(1.0);
+  float osc2sync = 1.476;
+  osc2a.sync(osc2sync);
   osc2a.amplitude(1.0);
   osc2a.begin(WAVEFORM_SAWTOOTH_REVERSE);
-  osc2b.sync(1.0);
+  osc2b.sync(osc2sync);
   osc2b.amplitude(1.0);
   osc2b.begin(WAVEFORM_SAWTOOTH_REVERSE);
-  osc2c.sync(1.0);
+  osc2c.sync(osc2sync);
   osc2c.amplitude(1.0);
   osc2c.begin(WAVEFORM_SAWTOOTH_REVERSE);
-  osc2d.sync(1.0);
+  osc2d.sync(osc2sync);
   osc2d.amplitude(1.0);
   osc2d.begin(WAVEFORM_SAWTOOTH_REVERSE);
 }
 
 void initOscillatorMixers() {
-  osc1mixer.gain(0, 0.15);
-  osc1mixer.gain(1, 0.15);
-  osc1mixer.gain(2, 0.15);
-  osc1mixer.gain(3, 0.15);
-  osc2mixer.gain(0, 0.15);
-  osc2mixer.gain(1, 0.15);
-  osc2mixer.gain(2, 0.15);
-  osc2mixer.gain(3, 0.15);
-  mixer.gain(0, 0.9);
-  mixer.gain(1, 1.0);
+  osc1Lmixer.gain(0, 0.15);
+  osc1Lmixer.gain(1, 0.10);
+  osc1Lmixer.gain(2, 0.05);
+  osc1Lmixer.gain(3, 0.0);
+
+  osc1Rmixer.gain(0, 0.0);
+  osc1Rmixer.gain(1, 0.05);
+  osc1Rmixer.gain(2, 0.10);
+  osc1Rmixer.gain(3, 0.15);
+
+  osc2Lmixer.gain(0, 0.15);
+  osc2Lmixer.gain(1, 0.10);
+  osc2Lmixer.gain(2, 0.05);
+  osc2Lmixer.gain(3, 0.0);
+
+  osc2Rmixer.gain(0, 0.0);
+  osc2Rmixer.gain(1, 0.05);
+  osc2Rmixer.gain(2, 0.10);
+  osc2Rmixer.gain(3, 0.15);
+
+  mixerL.gain(0, 0.9);
+  mixerL.gain(1, 1.0);
+  mixerR.gain(0, 0.9);
+  mixerR.gain(1, 1.0);
 }
 
 void initEnvelope() {
-  envelope.attack(10.0);
-  envelope.decay(30.0);
-  envelope.sustain(0.8);
-  envelope.hold(0.0);
-  envelope.release(100.0);
+  envelopeL.attack(10.0);
+  envelopeR.attack(10.0);
+  envelopeL.decay(30.0);
+  envelopeR.decay(30.0);
+  envelopeL.sustain(0.8);
+  envelopeR.sustain(0.8);
+  envelopeL.hold(0.0);
+  envelopeR.hold(0.0);
+  envelopeL.release(100.0);
+  envelopeR.release(100.0);
 }
 
 void setFrequency(float frequency) {
