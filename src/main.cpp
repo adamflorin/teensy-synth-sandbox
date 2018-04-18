@@ -7,7 +7,7 @@
 #define NUM_FIR_COEFFS 4
 
 void initOscillatorSmoothers();
-void initEq();
+void setEqEnvelope(float t);
 void initOscillators();
 void initOscillatorMixers();
 void initEnvelope();
@@ -99,7 +99,6 @@ void setup() {
 
   initOscillators();
   initOscillatorSmoothers();
-  initEq();
   initOscillatorMixers();
   initEnvelope();
 }
@@ -114,7 +113,11 @@ void loop() {
 
   envelopeL.noteOn();
   envelopeR.noteOn();
-  delay(duration * legato);
+  float t;
+  float startMillis = millis();
+  while ((t = (millis() / (startMillis + (duration * legato)))) < 1.0) {
+    setEqEnvelope(t);
+  }
 
   envelopeL.noteOff();
   envelopeR.noteOff();
@@ -128,9 +131,10 @@ void initOscillatorSmoothers() {
   osc2Rfirfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
 }
 
-void initEq() {
-  float filter1freq = 457.572;
-  float filter1q = 0.7;
+void setEqEnvelope(float t) {
+  float t_cubic = t * t * t;
+  float filter1freq = 457.572 + (t_cubic * 1000.0);
+  float filter1q = 0.7 + (t_cubic * 0.5);
   osc1Lfilter.setLowpass(0, filter1freq, filter1q);
   osc1Rfilter.setLowpass(0, filter1freq, filter1q);
   osc1Lfilter.setLowpass(1, filter1freq, filter1q);
@@ -142,7 +146,7 @@ void initEq() {
 }
 
 void initOscillators() {
-  float osc1sync = 1.0; //4.0;
+  float osc1sync = 1.0;
   osc1a.sync(osc1sync);
   osc1a.amplitude(1.0);
   osc1a.begin(WAVEFORM_SQUARETOOTH);
