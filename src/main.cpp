@@ -72,13 +72,18 @@ void setup() {
 }
 
 void loop() {
-  setFrequency(110.0);
+  float ratio = 1.0 + ((rand() % 4) / 4.0);
+  float octave_multiplier = powf(2.0, rand() % 2);
+  setFrequency(110.0 * ratio * octave_multiplier);
+
+  float duration = 250.0 * powf(2.0, rand() % 3);
+  const float legato = 0.75;
 
   envelope.noteOn();
-  delay(500.0);
+  delay(duration * legato);
 
   envelope.noteOff();
-  delay(500.0);
+  delay(duration * (1.0 - legato));
 }
 
 void initOscillatorSmoothers() {
