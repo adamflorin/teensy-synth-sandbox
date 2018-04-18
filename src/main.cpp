@@ -6,6 +6,13 @@
 
 #define NUM_FIR_COEFFS 4
 
+void initOscillatorSmoothers();
+void initEq();
+void initOscillators();
+void initOscillatorMixers();
+void initEnvelope();
+void setFrequency(float frequency);
+
 // max positive value is 0x7FFF; sum to something near
 short fir_coeffs[NUM_FIR_COEFFS] = {
   (short)0x1000,
@@ -52,6 +59,93 @@ AudioConnection patchCord13(envelope, 0, usbOutput, 1);
 AudioControlSGTL5000 sgtl5000_1;
 
 void setup() {
+  AudioMemory(50);
+
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(1.0);
+
+  initOscillators();
+  initOscillatorSmoothers();
+  initEq();
+  initOscillatorMixers();
+  initEnvelope();
+}
+
+void loop() {
+  setFrequency(110.0);
+
+  envelope.noteOn();
+  delay(500.0);
+
+  envelope.noteOff();
+  delay(500.0);
+}
+
+void initOscillatorSmoothers() {
+  osc1firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+  osc2firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
+}
+
+void initEq() {
+  float filter1freq = 457.572;
+  float filter1q = 0.7;
+  osc1filter.setLowpass(0, filter1freq, filter1q);
+  osc1filter.setLowpass(1, filter1freq, filter1q);
+  float filter2freq = 84.108;
+  float filter2q = 0.9;
+  osc2filter.setLowpass(0, filter2freq, filter2q);
+}
+
+void initOscillators() {
+  osc1a.sync(1.0);
+  osc1a.amplitude(1.0);
+  osc1a.begin(WAVEFORM_SQUARE);
+  osc1b.sync(1.0);
+  osc1b.amplitude(1.0);
+  osc1b.begin(WAVEFORM_SQUARE);
+  osc1c.sync(1.0);
+  osc1c.amplitude(1.0);
+  osc1c.begin(WAVEFORM_SQUARE);
+  osc1d.sync(1.0);
+  osc1d.amplitude(1.0);
+  osc1d.begin(WAVEFORM_SQUARE);
+
+  osc2a.sync(1.0);
+  osc2a.amplitude(1.0);
+  osc2a.begin(WAVEFORM_SAWTOOTH_REVERSE);
+  osc2b.sync(1.0);
+  osc2b.amplitude(1.0);
+  osc2b.begin(WAVEFORM_SAWTOOTH_REVERSE);
+  osc2c.sync(1.0);
+  osc2c.amplitude(1.0);
+  osc2c.begin(WAVEFORM_SAWTOOTH_REVERSE);
+  osc2d.sync(1.0);
+  osc2d.amplitude(1.0);
+  osc2d.begin(WAVEFORM_SAWTOOTH_REVERSE);
+}
+
+void initOscillatorMixers() {
+  osc1mixer.gain(0, 0.15);
+  osc1mixer.gain(1, 0.15);
+  osc1mixer.gain(2, 0.15);
+  osc1mixer.gain(3, 0.15);
+  osc2mixer.gain(0, 0.15);
+  osc2mixer.gain(1, 0.15);
+  osc2mixer.gain(2, 0.15);
+  osc2mixer.gain(3, 0.15);
+  mixer.gain(0, 0.9);
+  mixer.gain(1, 1.0);
+}
+
+void initEnvelope() {
+  envelope.attack(10.0);
+  envelope.decay(30.0);
+  envelope.sustain(0.8);
+  envelope.hold(0.0);
+  envelope.release(100.0);
+}
+
+void setFrequency(float frequency) {
   float num_voices = 4.0;
   float spread_cents = 3.0;
   float spread_increment = (spread_cents * 2.0) / (num_voices - 1.0);
@@ -61,87 +155,17 @@ void setup() {
   float spread_up_half = powf(2.0, (spread_cents - spread_increment) / CENTS_PER_OCTAVE);
   float spread_down_half = powf(2.0, (-spread_cents + spread_increment) / CENTS_PER_OCTAVE);
 
-  AudioMemory(50);
-
-  // output
-  sgtl5000_1.enable();
-  sgtl5000_1.volume(1.0);
-
-  // Osc 1
-  float osc1_base_freq = 110.0; // A3
-  osc1a.frequency(osc1_base_freq * spread_up);
-  osc1a.sync(4.0);
-  osc1a.amplitude(1.0);
-  osc1a.begin(WAVEFORM_SQUARETOOTH);
-  osc1b.frequency(osc1_base_freq * spread_down);
-  osc1b.sync(4.0);
-  osc1b.amplitude(1.0);
-  osc1b.begin(WAVEFORM_SQUARETOOTH);
-  osc1c.frequency(osc1_base_freq * spread_up_half);
-  osc1c.sync(4.0);
-  osc1c.amplitude(1.0);
-  osc1c.begin(WAVEFORM_SQUARETOOTH);
-  osc1d.frequency(osc1_base_freq * spread_down_half);
-  osc1d.sync(4.0);
-  osc1d.amplitude(1.0);
-  osc1d.begin(WAVEFORM_SQUARETOOTH);
-
-  // Osc 2
+  float osc1_base_freq = frequency;
   float osc2_base_freq = 4.0 * osc1_base_freq * powf(2, 10.9 / 1200.0);
+
+  osc1a.frequency(osc1_base_freq * spread_up);
+  osc1b.frequency(osc1_base_freq * spread_down);
+  osc1c.frequency(osc1_base_freq * spread_up_half);
+  osc1d.frequency(osc1_base_freq * spread_down_half);
   osc2a.frequency(osc2_base_freq * spread_up);
-  osc2a.sync(1.476);
-  osc2a.amplitude(1.0);
-  osc2a.begin(WAVEFORM_SAWTOOTH_REVERSE);
   osc2b.frequency(osc2_base_freq * spread_down);
-  osc2b.sync(1.476);
-  osc2b.amplitude(1.0);
-  osc2b.begin(WAVEFORM_SAWTOOTH_REVERSE);
   osc2c.frequency(osc2_base_freq * spread_up_half);
-  osc2c.sync(1.476);
-  osc2c.amplitude(1.0);
-  osc2c.begin(WAVEFORM_SAWTOOTH_REVERSE);
   osc2d.frequency(osc2_base_freq * spread_down_half);
-  osc2d.sync(1.476);
-  osc2d.amplitude(1.0);
-  osc2d.begin(WAVEFORM_SAWTOOTH_REVERSE);
 
-  // filters
-  float filter1freq = 457.572;
-  float filter1q = 0.7;
-  osc1filter.setLowpass(0, filter1freq, filter1q);
-  osc1filter.setLowpass(1, filter1freq, filter1q);
-  float filter2freq = 84.108;
-  float filter2q = 0.9;
-  osc2filter.setLowpass(0, filter2freq, filter2q);
-
-  osc1firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
-  osc2firfilter.begin(fir_coeffs, NUM_FIR_COEFFS);
-
-  // mixers
-  osc1mixer.gain(0, 0.15);
-  osc1mixer.gain(1, 0.15);
-  osc1mixer.gain(2, 0.15);
-  osc1mixer.gain(3, 0.15);
-  osc2mixer.gain(0, 0.15);
-  osc2mixer.gain(1, 0.15);
-  osc2mixer.gain(2, 0.15);
-  osc2mixer.gain(3, 0.15);
-  mixer.gain(0, 0.9); // Osc 1: eyeballing -0.61 dB
-  mixer.gain(1, 1.0); // TEMP // Osc 2: eyeballing 0 dB
-
-  // envelope
-  envelope.attack(10.0);
-  envelope.decay(2144.0);
-  envelope.sustain(0.6); // eyeballing -3.54 dB
-  envelope.hold(0.0);
-  envelope.release(1076.0);
-
-  delay(1000);
-}
-
-void loop() {
-  envelope.noteOn();
-  delay(500);
-  envelope.noteOff();
-  delay(1500);
+  initOscillators();
 }
