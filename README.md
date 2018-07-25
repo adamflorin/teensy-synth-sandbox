@@ -1,4 +1,4 @@
-# Phys-Ex
+# Teensy Synth Sandbox
 
 Synthesize sound on a Teensy 3.6.
 
